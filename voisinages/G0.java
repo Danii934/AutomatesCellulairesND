@@ -5,7 +5,7 @@ import tab.Grille;
 
 import java.util.Iterator;
 
-// Vosinage comortnant la cellule elle même
+// Vosinage comportnant la cellule elle même
 public class G0 extends Voisinage {
 
 	Grille grille;

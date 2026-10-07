@@ -5,7 +5,7 @@ public abstract class TableauDynamiqueND {
 	}
 	protected abstract void afficher();
 
-	public Cellule get(int coords[],int index, int dim) {
+	public Cellule get(int[] coords, int index, int dim) {
 		return null;
 	}
 	public Cellule get() {

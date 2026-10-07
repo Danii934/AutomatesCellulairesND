@@ -25,4 +25,5 @@ public abstract class Voisinage implements Iterator<Cellule>, Iterable<Cellule> 
     public void setCoords(int[] coords) {
         this.coordonnes = coords;
     }
+    public  abstract  void reset(Cellule cell) ;
 }
