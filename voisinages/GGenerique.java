@@ -6,13 +6,13 @@ import tab.Grille;
 
 import java.util.Iterator;
 
-public class VoisinageGenerique extends Voisinage {
+public class GGenerique extends Voisinage {
     Grille grille;
     Cellule c;
     // deplacements un tableau 2D de la taille n x d ou d est la dimension de la grille
     int[][] deplacements;
 
-    public VoisinageGenerique(Grille g, Cellule c, int[][] deplacements) throws DimensionIncompatibleException {
+    public GGenerique(Grille g, Cellule c, int[][] deplacements) throws DimensionIncompatibleException {
         if(g.getDimensions().length != deplacements[0].length || c.getCoords().length != g.getDimension() )
             throw new DimensionIncompatibleException();
         this.grille = g;
@@ -64,5 +64,10 @@ public class VoisinageGenerique extends Voisinage {
         }
         index++;
         return grille.get(ind, 0, grille.getDimension());
+    }
+    public void reset(Cellule cell)
+    {
+        c = cell;
+        index=0;
     }
 }
