@@ -27,4 +27,5 @@ public abstract class Voisinage implements Iterator<Cellule>, Iterable<Cellule> 
     }
     public  abstract  void reset(Cellule cell) ;
 
+
 }

@@ -1,9 +1,7 @@
 package parsing;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -13,6 +11,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import voisinages.GGenerique;
 import voisinages.Voisinage;
 
 public class ParseXML 
@@ -25,11 +24,19 @@ public class ParseXML
     int[] plan;
     String regle;
     boolean randomInitialisation;
+    boolean coupe2D;
     int[][] coordonneesCellulesVivantes;
     // Si plusieurs voisinages sont utilisés pour la règle d'évolution : NomVoisinage -> VoisinageGenerique
     Map<String, Voisinage> voisinages;
+
+    public  ParseXML()
+    {
+
+    }
     public ParseXML(String filename){
         this.filename = filename;
+        coupe2D = false;
+        voisinages = new HashMap<>();
     }
 
     public String getFilename() {
@@ -108,49 +115,41 @@ public class ParseXML
 
             // Récupèration de la dimension de la grille
             recupererDimensionsGrille(document);
+            System.out.println("Dimensionalité de la grille "+ this.dimensionalite);
+            for (int i = 0; i < dimensionsGrille.length; i++) {
+                System.out.println("Dimension "+(i+1)+" "+dimensionsGrille[i]);
+            }
 
             // Si la dimension est supérieure à 2 on extrait la coupe 2D qui sera affichée sur le GUI
-            NodeList cp = document.getElementsByTagName("coupe");
-            Node coupe = cp.item(0);
-            if(coupe.getNodeType() == Node.ELEMENT_NODE) {
-                System.out.println("Coupe 2D : " + ((Element) coupe).getTextContent());
+            if(dimensionalite > 2)
+            {
+                recupererCoupe(document);
             }
 
             // Voisinage
-            NodeList voisinage = document.getElementsByTagName("voisinages");
-            System.out.println("Nombre de balise voisinage : " + voisinage.getLength());
-            System.out.println("Nombre d'enfants de la balise voisinage : " + voisinage.item(0).getChildNodes().getLength());
+            NodeList noeudVoisinages = document.getElementsByTagName("voisinages");
+            if(noeudVoisinages.getLength() > 1 || noeudVoisinages.getLength() <= 0)
+            {
+                System.out.println("Une seule balise voisinage doit être présente dans le fichier");
+                System.exit(1);
+            }
             System.out.println("Enfants de la balise voisinage");
-            NodeList voisinageEnfants = voisinage.item(0).getChildNodes();
-            for (int i = 0; i < voisinageEnfants.getLength(); i++) {
-                Node node = voisinageEnfants.item(i);
+            NodeList voisinagesEnfants = noeudVoisinages.item(0).getChildNodes();
+            for (int i = 0; i < voisinagesEnfants.getLength(); i++) {
+                Node node = voisinagesEnfants.item(i);
                 if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals("voisinage")) {
-                    System.out.println(((Element) node).getAttribute("nom"));
-                    NodeList voisinageChilds = node.getChildNodes();
-                    /*NodeList coordsChilds = node.getChildNodes();*/
+                    ExtraireVoisinage((Element) node);
 
-                    for (int j = 0; j < voisinageChilds.getLength(); j++) {
-                        Node node1 = voisinageChilds.item(j);
-                        if(node1.getNodeType() == Node.ELEMENT_NODE && node1.getNodeName().equals("coords"))
-                        {
-                            NodeList coordsList = node1.getChildNodes();
-                            for (int k = 0; k < coordsList.getLength() ; k++) {
-                                Node node2 = coordsList.item(k);
-                                if(node2.getNodeType() == Node.ELEMENT_NODE && node2.getNodeName().equals("coord")) {
-                                    System.out.println("coord " + node2.getTextContent());
-                                }
-                            }
-                        }
-                    }
                 }
             }
+            System.out.println(voisinages);
 
 
 
 
 
            /* // Contrôle des coordonnées à faire si la la dimension matche avec les coordonnées
-            System.out.println("Taille grille" + voisinage.getLength());*/
+            System.out.println("Taille grille" + voisinage.getLength());*//*
             // RÈGLE d'évoulution
             // Traiter les eventuels \n pour la regle d'évolution
 
@@ -169,7 +168,7 @@ public class ParseXML
                 {
                     System.out.println("<"+node.getTextContent()+">");
                 }
-            }
+            }*/
 
         }
         catch (DimensionIncompatibleException e)
@@ -185,6 +184,42 @@ public class ParseXML
 
 
     }
+
+    private void recupererCoupe(Document doc)
+    {
+        NodeList noeudCoupe = doc.getElementsByTagName("coupe");
+        if(noeudCoupe.getLength()  > 1 || (dimensionalite > 2 && noeudCoupe.getLength() <=0))
+        {
+            System.out.println("Une seule coupe 2D doit être mentionnee dans le cas ou la dimensionalite de la grille est supérieur 2");
+            System.out.println("Format attentdu dans le fichier : "+"(x,:,:,) avec ':' les 2 axes consideres");
+
+            System.exit(1);
+        }
+
+        if(dimensionalite > 2 && noeudCoupe.getLength() == 1) {
+            Node coupe = noeudCoupe.item(0);
+            if (coupe.getNodeType() == Node.ELEMENT_NODE) {
+                System.out.println("Coupe 2D : " + ((Element) coupe).getTextContent());
+            }
+            StringTokenizer tokenizer = new StringTokenizer(((Element) coupe).getTextContent(), "(),");
+            plan = new int[dimensionalite];
+            int i = 0;
+            while (tokenizer.hasMoreTokens()) {
+                String token = tokenizer.nextToken();
+                try
+                {
+                    plan[i] = Integer.parseInt(token);
+                } catch (NumberFormatException e) {
+                    if(token.equals(":"))
+                    {
+                        plan[i] = -1;
+                    }
+                }
+                i++;
+            }
+        }
+    }
+
     void recupererDimensionsGrille(Document doc) throws DimensionIncompatibleException {
         NodeList dimensionGrilleNode = doc.getElementsByTagName("dimensionGrille");
         if(dimensionGrilleNode.getLength() > 1 || dimensionGrilleNode.getLength() <= 0)
@@ -196,7 +231,7 @@ public class ParseXML
             this.dimensionalite = Integer.parseInt(dimensionGrilleNode.item(0).getTextContent());
 
             NodeList tailleGrille = doc.getElementsByTagName("tailleGrille");
-            ArrayList<Integer> dimensions = new ArrayList<Integer>();
+            ArrayList<Integer> dimensions = new ArrayList<>();
 
             for (int i = 0; i < tailleGrille.item(0).getChildNodes().getLength(); i++) {
                 Node node = tailleGrille.item(0).getChildNodes().item(i);
@@ -232,5 +267,80 @@ public class ParseXML
         }
     }
 
+    void ExtraireVoisinage(Element voisinage)
+    {
+        String nomVosinage = voisinage.getAttribute("nom");
+        NodeList voisinageChilds = voisinage.getChildNodes();
+        ArrayList<String> coords = new ArrayList<String>();
 
+        int nbListesCoords = 0;
+        for (int j = 0; j < voisinageChilds.getLength(); j++) {
+            Node node1 = voisinageChilds.item(j);
+            if(node1.getNodeType() == Node.ELEMENT_NODE && node1.getNodeName().equals("coords"))
+            {
+
+                if(nbListesCoords > 1)
+                {
+                    System.out.println("Une seule liste de coordonnes par voisinage doit etre ecrite");
+                    System.exit(1);
+                }
+                NodeList coordsList = node1.getChildNodes();
+                for (int k = 0; k < coordsList.getLength() ; k++) {
+                    Node node2 = coordsList.item(k);
+
+                    if(node2.getNodeType() == Node.ELEMENT_NODE && node2.getNodeName().equals("coord")) {
+                        verifierCoordonnees(node2.getTextContent());
+                        coords.add(node2.getTextContent());
+                    }
+                }
+                nbListesCoords++;
+
+            }
+        }
+        int[][] deplacements = new int[coords.size()][dimensionalite];
+        for (int i = 0; i < coords.size(); i++) {
+            ExtraireCoordonnees(coords.get(i),deplacements,i);
+        }
+        System.out.println(nomVosinage);
+        GGenerique v = new GGenerique();
+        v.setDeplacements(deplacements);
+        voisinages.put(nomVosinage,v);
+        System.out.println(v);
+
+    }
+
+    private void verifierCoordonnees(String coordonnes) {
+        StringTokenizer tokenizer = new StringTokenizer(coordonnes, "(),");
+        if(tokenizer.countTokens() == dimensionalite)
+        {
+            while (tokenizer.hasMoreTokens()) {
+                String token = tokenizer.nextToken();
+                try {
+                    Integer.parseInt(token);
+                } catch (NumberFormatException e) {
+                    System.out.println("Erreur dans la saisie des coordonees du voisinage, Verifier si les coordooness saisies sont tous des entiers");
+                    System.exit(1);
+                }
+            }
+            System.out.println(coordonnes);
+        }
+        else
+        {
+            System.out.println("Cordonnes pour le voisinage incorrectes verifier la liste de coordonnes dans le fichier d'entree");
+            System.out.println("Dimensionalite attendue : "+ dimensionalite +"\n"+ "Dimensionalite trouvee "+ tokenizer.countTokens());
+
+            System.exit(1);
+        }
+    }
+
+    private void ExtraireCoordonnees(String s, int[][] deplacements, int index) {
+        StringTokenizer tokenizer = new StringTokenizer(s, "(),");
+        int i = 0;
+        while(tokenizer.hasMoreTokens())
+        {
+            String token = tokenizer.nextToken();
+            deplacements[index][i++] = Integer.parseInt(token);
+        }
+
+    }
 }

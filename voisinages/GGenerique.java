@@ -9,12 +9,20 @@ import java.util.Iterator;
 public class GGenerique extends Voisinage {
     Grille grille;
     Cellule c;
+
+
+
     // deplacements un tableau 2D de la taille n x d ou d est la dimension de la grille
     int[][] deplacements;
 
+    public GGenerique(){}
     public GGenerique(Grille g, Cellule c, int[][] deplacements) throws DimensionIncompatibleException {
-        if(g.getDimensions().length != deplacements[0].length || c.getCoords().length != g.getDimension() )
-            throw new DimensionIncompatibleException();
+        for (int i = 0; i < deplacements.length; i++) {
+            if(deplacements[0].length != g.getDimension())
+            {
+                throw new DimensionIncompatibleException();
+            }
+        }
         this.grille = g;
         this.c = c;
         this.deplacements = deplacements;
@@ -69,5 +77,39 @@ public class GGenerique extends Voisinage {
     {
         c = cell;
         index=0;
+    }
+
+    public int[][] getDeplacements() {
+        return deplacements;
+    }
+
+    public void setDeplacements(int[][] deplacements) {
+        this.deplacements = deplacements;
+    }
+
+    @Override
+    public  String toString()
+    {
+        String s = "{";
+        for (int i = 0; i < deplacements.length  ; i++) {
+            s+="(";
+            for (int j = 0; j < deplacements[i].length; j++) {
+                s+=deplacements[i][j];
+                if(j != deplacements[i].length -1)
+                {
+                    s+=",";
+                }
+            }
+            if(i != deplacements.length -1)
+            {
+                s+="),";
+            }
+            else
+            {
+                s+=")";
+            }
+
+        }
+        return s+="}";
     }
 }
