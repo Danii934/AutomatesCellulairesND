@@ -3,6 +3,7 @@ package parsing;
 import operateurs.*;
 import voisinages.*;
 
+import javax.swing.*;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -15,93 +16,128 @@ public class ParseRule {
         this.regle = regle;
     }
 
-    public Operateur traiterRegle()
-    {
+    public Operateur traiterRegle()  {
         return reconnaitreOperateur(new StringTokenizer(regle, "(),",true));
     }
-    public Operateur reconnaitreOperateur(StringTokenizer tokenizer)
-    {
+    public Operateur reconnaitreOperateur(StringTokenizer tokenizer) throws IllegalArgumentException {
         if(tokenizer.hasMoreTokens())
         {
-            return reconnaitreOperateurBis(tokenizer,null);
+            Operateur res =  reconnaitreOperateurBis(tokenizer);
+            if(tokenizer.hasMoreTokens())
+            {
+                throw  new IllegalArgumentException("La regle contient des caracteres superflus");
+            }
+            return  res;
         }
-
-        return null;
+        else {
+        throw  new IllegalArgumentException("La regle est vide");
+        }
     }
-    public Operateur reconnaitreOperateurBis(StringTokenizer tokenizer, Operateur acc)
-    {
-        if(tokenizer.hasMoreTokens()) {
-            String token = tokenizer.nextToken();
-            Operateur op1, op2;
+    public Operateur reconnaitreOperateurBis(StringTokenizer tokenizer) throws IllegalArgumentException {
+
+        String token = tokenizer.nextToken();
+        Operateur op1, op2,op3;
             switch (token) {
                 case "ADD":
-                    op1 = reconnaitreOperateurBis(tokenizer, acc);
-                    op2 = reconnaitreOperateurBis(tokenizer, acc);
+                    verifierToken(tokenizer,"(");
+                    op1 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,",");
+                    op2 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,")");
                     return new ADD(op1, op2);
                 case "COMPTER":
-                    if (tokenizer.nextToken().equals("(")) {
-
-                        String voisinage = tokenizer.nextToken();
-                        return reconnaitreOperateurBis(tokenizer, new COMPTER(reconnaitreVoisinage(voisinage)));
-                    } else {
-                        System.out.println("Merci de verifier la saisie de la règle au niveau de l'operateru compter");
-                        System.exit(1);
+                        verifierToken(tokenizer,"(");
+                    if (!tokenizer.hasMoreTokens()) {
+                        throw new IllegalArgumentException(
+                                "Le nom du voisinage est manquant dans COMPTER."
+                        );
                     }
-
-                    break;
+                        String voisinage = tokenizer.nextToken();
+                        verifierToken(tokenizer,")");
+                        return new COMPTER(reconnaitreVoisinage(voisinage));
                 case "EQ":
-                    op1 = reconnaitreOperateurBis(tokenizer, acc);
-                    op2 = reconnaitreOperateurBis(tokenizer, acc);
+                    verifierToken(tokenizer,"(");
+                    op1 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,",");
+                    op2 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,")");
                     return new EQ(op1, op2);
                 case "ET":
-                    op1 = reconnaitreOperateurBis(tokenizer, acc);
-                    op2 = reconnaitreOperateurBis(tokenizer, acc);
+                    verifierToken(tokenizer,"(");
+                    op1 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,",");
+                    op2 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,")");
                     return new ET(op1, op2);
                 case "MUL":
-                    op1 = reconnaitreOperateurBis(tokenizer, acc);
-                    op2 = reconnaitreOperateurBis(tokenizer, acc);
+                    verifierToken(tokenizer,"(");
+                    op1 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,",");
+                    op2 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,")");
+
                     return new MUL(op1, op2);
                 case "NON":
-                    op1 = reconnaitreOperateurBis(tokenizer, acc);
+                    verifierToken(tokenizer,"(");
+                    op1 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,")");
+
                     return new NON(op1);
                 case "OU":
-                    op1 = reconnaitreOperateurBis(tokenizer, acc);
-                    op2 = reconnaitreOperateurBis(tokenizer, acc);
+                    verifierToken(tokenizer,"(");
+                    op1 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,",");
+                    op2 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,")");
+
                     return new OU(op1, op2);
                 case "SI":
-                    Operateur fi = reconnaitreOperateurBis(tokenizer, acc);
-                    Operateur th = reconnaitreOperateurBis(tokenizer, acc);
-                    Operateur els = reconnaitreOperateurBis(tokenizer, acc);
-                    return new SI(fi, th, els);
+                    verifierToken(tokenizer,"(");
+                    op1 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,",");
+                    op2 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,",");
+                    op3 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,")");
+
+                    return new SI(op1, op2, op3);
                 case "SUB":
-                    op1 = reconnaitreOperateurBis(tokenizer, acc);
-                    op2 = reconnaitreOperateurBis(tokenizer, acc);
+                    verifierToken(tokenizer,"(");
+
+                    op1 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,",");
+
+                    op2 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,")");
+
                     return new SUB(op1, op2);
                 case "SUP":
-                    op1 = reconnaitreOperateurBis(tokenizer, acc);
-                    op2 = reconnaitreOperateurBis(tokenizer, acc);
+                    verifierToken(tokenizer,"(");
+                    op1 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,",");
+
+                    op2 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,")");
+
                     return new SUP(op1, op2);
                 case "SUPEQ":
-                    op1 = reconnaitreOperateurBis(tokenizer, acc);
-                    op2 = reconnaitreOperateurBis(tokenizer, acc);
+                    verifierToken(tokenizer,"(");
+
+                    op1 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,",");
+
+                    op2 = reconnaitreOperateurBis(tokenizer);
+                    verifierToken(tokenizer,")");
+
                     return new SUPEQ(op1, op2);
-                case ",":
-                        return acc;
-                case "(", ")":
-                    return reconnaitreOperateurBis(tokenizer, acc);
                 default:
                     /*System.out.println("Cas de base " + token);*/
                     try {
-                        int cst = Integer.parseInt(token);
-                        acc = new CONST(cst);
-                        return reconnaitreOperateurBis(tokenizer, acc);
+                        return new CONST(Integer.parseInt(token));
                     } catch (NumberFormatException e) {
-                        System.out.println("Une tentative de conversion de caractère en valeur numérique a echouée");
-                        System.exit(1);
+                        throw  new IllegalArgumentException("Opérateur ou constante non reconnu : " + token);
                     }
             }
-        }
-        return acc;
     }
 
     private Voisinage reconnaitreVoisinage(String s) {
@@ -114,25 +150,40 @@ public class ParseRule {
                 return new G2();
             case "G4":
                 return new G4();
+            case "G6":
+                return new G6();
             case "G8" :
                 return new G8();
             case "G26" :
                 return new G26();
             default :
-                if(voisinageMap.containsKey(s))
-                {
+                if (voisinageMap != null
+                        && voisinageMap.containsKey(s)) {
                     return voisinageMap.get(s);
                 }
-                else
-                {
-                    System.out.println("Voisinage non reconnu");
-                    System.exit(1);
-                }
+
+                throw new IllegalArgumentException(
+                        "Voisinage non reconnu : " + s
+                );
 
 
         }
-        return null;
+
     }
+    private void verifierToken(StringTokenizer tokenizer, String token)
+    {
+        if (!tokenizer.hasMoreTokens()) {
+            throw new IllegalArgumentException(
+                    "La règle est incomplète : le token '" + token
+                            + "' était attendu."
+            );
+        }
+        if(!tokenizer.nextToken().equals(token))
+        {
+            throw new IllegalArgumentException("Le caractere suivant etait attendu dans la regle :"  + "'" +token +"'");
+        }
+    }
+
 
 
 }
