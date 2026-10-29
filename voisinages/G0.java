@@ -8,14 +8,10 @@ import java.util.Iterator;
 // Vosinage comportnant la cellule elle même
 public class G0 extends Voisinage {
 
-	Grille grille;
-	Cellule c;
-	int index; // nécessaire pour parcourir les cellules voisines
-	int[] coordonnes;
 	public G0(){}
 	public G0(Cellule c, Grille g)
 	{
-		this.c = c;
+		this.cellule = c;
 		grille = g;
 		coordonnes = c.getCoords();
 		index = 0;
@@ -29,12 +25,13 @@ public class G0 extends Voisinage {
 	@Override
 	public boolean hasNext() {
 		// 1 seul dimension
-		return  false;
+		return index < 1;
 	}
 
 	@Override
 	public Cellule next() {
-		return c;
+		index++;
+		return cellule;
 	}
 	public String toString()
 	{
@@ -44,7 +41,7 @@ public class G0 extends Voisinage {
 	// Revenir à un point donné
 	public void reset(Cellule cell)
 	{
-		c = cell;
+		cellule = cell;
 		index=0;
 	}
 

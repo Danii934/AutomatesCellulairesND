@@ -6,8 +6,6 @@ import tab.Cellule;
 import tab.Grille;
 public class G6 extends Voisinage {
 	
-	Grille grille;
-	Cellule c;
 	int[][] deplacements = {{0,0,0},{1,0,0},{-1,0,0},{0,1,0},{0,-1,0},{0,0,1},{0,0,-1}};
 
 	public G6(){}
@@ -15,7 +13,7 @@ public class G6 extends Voisinage {
 	public G6(Cellule c, Grille g) throws DimensionIncompatibleException {
 		if(c.getCoords().length != 3)
 			throw new DimensionIncompatibleException();
-		this.c = c;
+		this.cellule = c;
 		grille = g;
 		index = 0;
 		coordonnes = c.getCoords();
@@ -28,29 +26,20 @@ public class G6 extends Voisinage {
 
 	@Override
 	public boolean hasNext() {
-		int len1 = dimensions[0];
-		int len2 = dimensions[1];
-		int len3 = dimensions[2];
-		int[] newCoords = new int[3];
-		if(index < deplacements.length)
-		{
-			//X
-			newCoords[0] = coordonnes[0] + deplacements[index][0];
-			//Y
-			newCoords[1] = coordonnes[1] + deplacements[index][1];
-			// Z
-			newCoords[2] = coordonnes[2] + deplacements[index][2];
-
-			while(index < deplacements.length )
-			{
-				if(newCoords[0] < 0 || newCoords[0] >= len1 || newCoords[1] < 0 || newCoords[1] >= len2 || newCoords[2] < 0 || newCoords[2] >= len3)
-					index++;
-				else
+		while (index < deplacements.length) {
+			boolean dedans = true;
+			for (int k = 0; k < 3; k++) {
+				int x = coordonnes[k] + deplacements[index][k];
+				if (x < 0 || x >= dimensions[k]) {
+					dedans = false;
 					break;
+				}
 			}
+			if (dedans) return true;
+			index++;
 		}
+		return false;
 
-		return (index <= deplacements.length - 1);
 	}
 
 	@Override
@@ -70,7 +59,7 @@ public class G6 extends Voisinage {
 	
 	public void reset(Cellule cell)
 	{
-		c = cell;
+		cellule = cell;
 		index=0;
 	}
 }

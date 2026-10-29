@@ -9,7 +9,6 @@ import java.util.StringTokenizer;
 
 public class ParseRule {
     String regle;
-    Operateur op;
     Map<String, Voisinage> voisinageMap;
     public ParseRule(String regle)
     {
@@ -46,7 +45,7 @@ public class ParseRule {
                     verifierToken(tokenizer,")");
                     return new ADD(op1, op2);
                 case "COMPTER":
-                        verifierToken(tokenizer,"(");
+                    verifierToken(tokenizer,"(");
                     if (!tokenizer.hasMoreTokens()) {
                         throw new IllegalArgumentException(
                                 "Le nom du voisinage est manquant dans COMPTER."
@@ -141,33 +140,21 @@ public class ParseRule {
     }
 
     private Voisinage reconnaitreVoisinage(String s) {
-        System.out.println(s);
-        switch (s)
-        {
-            case "G0" :
-                return new G0();
-            case "G2" :
-                return new G2();
-            case "G4":
-                return new G4();
-            case "G6":
-                return new G6();
-            case "G8" :
-                return new G8();
-            case "G26" :
-                return new G26();
-            default :
-                if (voisinageMap != null
-                        && voisinageMap.containsKey(s)) {
-                    return voisinageMap.get(s);
-                }
+        Voisinage v = voisinageMap.get(s);     // déjà créé, ou personnalisé
+        if (v != null) return v;
 
-                throw new IllegalArgumentException(
-                        "Voisinage non reconnu : " + s
-                );
-
-
+        switch (s) {
+            case "G0":  v = new G0();  break;
+            case "G2":  v = new G2();  break;
+            case "G4":  v = new G4();  break;
+            case "G6":  v = new G6();  break;
+            case "G8":  v = new G8();  break;
+            case "G26": v = new G26(); break;
+            default:
+                throw new IllegalArgumentException("Voisinage non reconnu : " + s);
         }
+        voisinageMap.put(s, v);
+        return v;
 
     }
     private void verifierToken(StringTokenizer tokenizer, String token)
@@ -184,6 +171,11 @@ public class ParseRule {
         }
     }
 
+    public Map<String, Voisinage> getVoisinageMap() {
+        return voisinageMap;
+    }
 
-
+    public void setVoisinageMap(Map<String, Voisinage> voisinageMap) {
+        this.voisinageMap = voisinageMap;
+    }
 }

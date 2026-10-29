@@ -7,9 +7,6 @@ import tab.Grille;
 import java.util.Iterator;
 
 public class GGenerique extends Voisinage {
-    Grille grille;
-    Cellule c;
-
 
 
     // deplacements un tableau 2D de la taille n x d ou d est la dimension de la grille
@@ -24,7 +21,7 @@ public class GGenerique extends Voisinage {
             }
         }
         this.grille = g;
-        this.c = c;
+        this.cellule = c;
         this.deplacements = deplacements;
         index = 0;
         coordonnes = c.getCoords();
@@ -75,7 +72,7 @@ public class GGenerique extends Voisinage {
     }
     public void reset(Cellule cell)
     {
-        c = cell;
+        cellule = cell;
         index=0;
     }
 

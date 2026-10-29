@@ -5,14 +5,12 @@ import tab.Grille;
 // Vosinage 1D
 public class G2 extends Voisinage {
 
-	Grille grille;
-	Cellule c;
 	int[] deplacements = {0,1,-1}; // Emplacement des voisins
 
 	public G2(){}
 	public G2(Cellule c, Grille g)
 	{
-		this.c = c;
+		this.cellule = c;
 		grille = g;
 		index = 0;
 		coordonnes = c.getCoords();
@@ -57,7 +55,7 @@ public class G2 extends Voisinage {
 	// Revenir à un point donné
 	public void reset(Cellule cell)
 	{
-		c = cell;
+		cellule = cell;
 		index=0;
 	}
 

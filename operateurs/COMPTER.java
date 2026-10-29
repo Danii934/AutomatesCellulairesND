@@ -15,6 +15,7 @@ public class COMPTER extends Operateur {
 
     public int getValue()
     {
+        v.rewind();                       // repart du premier déplacement
         Iterator<Cellule> it = v.iterator();
         int val = 0;
         while(it.hasNext()) {

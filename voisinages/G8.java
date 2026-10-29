@@ -6,8 +6,6 @@ import tab.Cellule;
 import tab.Grille;
 public class G8 extends Voisinage {
 	
-	Grille grille;
-	Cellule c;
 	int[][] deplacements = {{0,0},{0,-1},{0,1},{1,0},{-1,0},{1,1},{-1,-1},{-1,1},{1,-1}};
 
 	public G8(){}
@@ -16,7 +14,7 @@ public class G8 extends Voisinage {
 		if(c.getCoords().length != 2)
 			throw new DimensionIncompatibleException();
 
-		this.c = c;
+		this.cellule = c;
 		grille = g;
 		index = 0;
 		coordonnes = c.getCoords();
@@ -69,7 +67,7 @@ public class G8 extends Voisinage {
 	}
 	public void reset(Cellule cell)
 	{
-		c = cell;
+		cellule = cell;
 		index=0;
 	}	
 }

@@ -7,6 +7,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import Exceptions.DimensionIncompatibleException;
+import Exceptions.EntreeIncorrecteException;
+import operateurs.Operateur;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -22,12 +24,13 @@ public class ParseXML
     int[] dimensionsGrille;
     int[][] coordonnesVoisinage;
     int[] plan;
-    String regle;
     boolean randomInitialisation;
-    boolean coupe2D;
+    boolean assignedCells;
+    int randomConst;
     int[][] coordonneesCellulesVivantes;
     // Si plusieurs voisinages sont utilisés pour la règle d'évolution : NomVoisinage -> VoisinageGenerique
     Map<String, Voisinage> voisinages;
+    Operateur regleEvolution;
 
     public  ParseXML()
     {
@@ -35,7 +38,6 @@ public class ParseXML
     }
     public ParseXML(String filename){
         this.filename = filename;
-        coupe2D = false;
         voisinages = new HashMap<>();
     }
 
@@ -75,17 +77,10 @@ public class ParseXML
         return plan;
     }
 
-    public void setPlan(int[] plan) {
-        this.plan = plan;
-    }
 
-    public String getRegle() {
-        return regle;
-    }
 
-    public void setRegle(String regle) {
-        this.regle = regle;
-    }
+
+
 
     public boolean isRandomInitialisation() {
         return randomInitialisation;
@@ -101,6 +96,26 @@ public class ParseXML
 
     public void setCoordonneesCellulesVivantes(int[][] coordonneesCellulesVivantes) {
         this.coordonneesCellulesVivantes = coordonneesCellulesVivantes;
+    }
+
+    public Map<String, Voisinage> getVoisinages() {
+        return voisinages;
+    }
+
+    public void setVoisinages(Map<String, Voisinage> voisinages) {
+        this.voisinages = voisinages;
+    }
+
+    public boolean isAssignedCells() {
+        return assignedCells;
+    }
+
+    public int getRandomConst() {
+        return randomConst;
+    }
+
+    public Operateur getRegleEvolution() {
+        return regleEvolution;
     }
 
     public void readFile()
@@ -126,49 +141,113 @@ public class ParseXML
                 recupererCoupe(document);
             }
 
-            // Voisinage
+            // Voisinage supplementaires
             NodeList noeudVoisinages = document.getElementsByTagName("voisinages");
-            if(noeudVoisinages.getLength() > 1 || noeudVoisinages.getLength() <= 0)
+            if(noeudVoisinages.getLength() > 1)
             {
-                System.out.println("Une seule balise voisinage doit être présente dans le fichier");
-                System.exit(1);
+                throw new EntreeIncorrecteException("Une seule balise voisinage doit être présente dans le fichier");
             }
-            System.out.println("Enfants de la balise voisinage");
-            NodeList voisinagesEnfants = noeudVoisinages.item(0).getChildNodes();
-            for (int i = 0; i < voisinagesEnfants.getLength(); i++) {
-                Node node = voisinagesEnfants.item(i);
-                if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals("voisinage")) {
-                    ExtraireVoisinage((Element) node);
+            // On extrait les voisinages supplementaires
+            if(noeudVoisinages.getLength() > 0)
+            {
+                System.out.println("Enfants de la balise voisinage");
+                NodeList voisinagesEnfants = noeudVoisinages.item(0).getChildNodes();
+                for (int i = 0; i < voisinagesEnfants.getLength(); i++) {
+                    Node node = voisinagesEnfants.item(i);
+                    if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals("voisinage")) {
+                        ExtraireVoisinage((Element) node);
 
+                    }
                 }
+                System.out.println(voisinages);
             }
-            System.out.println(voisinages);
 
-
-
-
-
-           /* // Contrôle des coordonnées à faire si la la dimension matche avec les coordonnées
-            System.out.println("Taille grille" + voisinage.getLength());*//*
             // RÈGLE d'évoulution
             // Traiter les eventuels \n pour la regle d'évolution
 
-            NodeList regle = document.getElementsByTagName("regle");
-            String regleFinale = regle.item(0).getTextContent().replaceAll("\\s+", "");
-            System.out.println(regleFinale);
+            NodeList nodeRegle = document.getElementsByTagName("regle");
+            if(nodeRegle.getLength() > 1 || nodeRegle.getLength() <=0)
+            {
+                throw new EntreeIncorrecteException("Une seule et unique regle doit etre mentionee dans votre fichier de configuration ");
+            }
 
-            // Celulles vivantes
-            NodeList cellulesVivantes = document.getElementsByTagName("initialisation");
-            NodeList enfantsCellulesVivantes =  cellulesVivantes.item(0).getChildNodes();
-            System.out.println("Nombre de balises Initialisation : " + cellulesVivantes.getLength());
-            System.out.println("Nombre d'enfants de la balise Initialisation : " + enfantsCellulesVivantes.getLength());
-            for (int i = 0; i < enfantsCellulesVivantes.getLength(); i++) {
-                Node node = enfantsCellulesVivantes.item(i);
-                if(node.getNodeType() == Node.ELEMENT_NODE)
-                {
-                    System.out.println("<"+node.getTextContent()+">");
+            String regleFinale = nodeRegle.item(0).getTextContent().replaceAll("\\s+", "");
+            ParseRule parseRegle = new ParseRule(regleFinale);
+            parseRegle.setVoisinageMap(voisinages);
+            regleEvolution = parseRegle.traiterRegle();
+
+            System.out.println(regleEvolution);
+
+            // Celulles vivantes a l'intialisation
+            TreeSet<String> cellulesVivantes = new TreeSet<>();
+
+            NodeList nodeCellulesVivantes = document.getElementsByTagName("initialisation");
+            if(nodeCellulesVivantes.getLength() != 1)
+            {
+                throw new EntreeIncorrecteException(
+                        "Le fichier doit contenir exactement une balise <initialisation>."
+                );
+            }
+            NodeList enfantsCellulesVivantes =  nodeCellulesVivantes.item(0).getChildNodes();
+
+
+
+
+            verfierInitialisationCellules(enfantsCellulesVivantes);
+
+
+
+            if(randomInitialisation)
+            {
+                Node randomK = recupererElementEnfant(enfantsCellulesVivantes,"random");
+                randomConst = Integer.parseInt(randomK.getTextContent());
+
+                if (randomConst < 0 || randomConst > 100) {
+                    throw new EntreeIncorrecteException(
+                            "La probabilité doit être comprise entre 0 et 100."
+                    );
                 }
-            }*/
+                System.out.println("Random initialisation : "+ randomConst);
+            }
+            if(assignedCells)
+            {
+                Node listeCells = recupererElementEnfant(enfantsCellulesVivantes,"cellules");
+                NodeList listeCellules = listeCells.getChildNodes();
+                for (int i = 0; i < listeCellules.getLength(); i++) {
+                    Node node = listeCellules.item(i);
+                    if(node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals("cellule"))
+                    {
+                        verifierCoordonnees(node.getTextContent());
+                        cellulesVivantes.add(node.getTextContent());
+                    }
+                }
+                coordonneesCellulesVivantes = new int[cellulesVivantes.size()][dimensionalite];
+                int idx = 0;
+                for (String coords : cellulesVivantes)
+                {
+                    ExtraireCoordonnees(coords,coordonneesCellulesVivantes,idx);
+                    idx++;
+                }
+
+
+
+                for (int i = 0; i < coordonneesCellulesVivantes.length; i++) {
+                    verifierCoordonneesCellule(coordonneesCellulesVivantes[i]);
+                    System.out.print("(");
+                    for (int j = 0; j < dimensionalite; j++) {
+                        if(j != dimensionalite -1) {
+                            System.out.print(coordonneesCellulesVivantes[i][j] + ",");
+                        }
+                        else
+                        {
+                            System.out.print(coordonneesCellulesVivantes[i][j]);
+                        }
+
+                    }
+                    System.out.println(")");
+                }
+            }
+            System.out.print("Finsih\n");
 
         }
         catch (DimensionIncompatibleException e)
@@ -185,15 +264,67 @@ public class ParseXML
 
     }
 
-    private void recupererCoupe(Document doc)
-    {
+    private Node recupererElementEnfant(NodeList list, String tagName) {
+        for (int i = 0; i < list.getLength(); i++) {
+            Node node = list.item(i);
+            if(node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(tagName))
+            {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    private void verfierInitialisationCellules(NodeList enfantsCellulesVivantes) throws EntreeIncorrecteException {
+        int nbListeCells = 0;
+        int nbRandomConsts = 0;
+        for (int i = 0; i < enfantsCellulesVivantes.getLength(); i++) {
+            Node node = enfantsCellulesVivantes.item(i);
+            if(node.getNodeType() == Node.ELEMENT_NODE)
+            {
+                if(node.getNodeName().equals("random"))
+                {
+                    nbRandomConsts++;
+                    if(nbRandomConsts > 1)
+                    {
+                        throw new EntreeIncorrecteException("Une seule valeur pour l'initialisation aleatoire doit etre presente dans le ficher de configuration");
+                    }
+                    randomInitialisation = true;
+
+                }
+                if(node.getNodeName().equals("cellules"))
+                {
+                    nbListeCells++;
+                    if(nbListeCells > 1)
+                    {
+                        throw new EntreeIncorrecteException("Une seule liste de cellules vivantes doit etre presenete dans le fichier de configuration");
+                    }
+                    assignedCells = true;
+
+                }
+            }
+        }
+        if(randomInitialisation && assignedCells)
+        {
+            throw new EntreeIncorrecteException("Pour l'initialisation des cellules vivantes, soit une liste de coordonnees, " +
+                    "soit random(k) avec k la probabilite en % qu'une cellule soit vivante mais pas les deux a la fois");
+        }
+        if (!randomInitialisation && !assignedCells) {
+            throw new EntreeIncorrecteException(
+                    "L'initialisation doit contenir une balise <random> "
+                            + "ou une liste <cellules>."
+            );
+        }
+
+    }
+
+    private void recupererCoupe(Document doc) throws EntreeIncorrecteException {
         NodeList noeudCoupe = doc.getElementsByTagName("coupe");
         if(noeudCoupe.getLength()  > 1 || (dimensionalite > 2 && noeudCoupe.getLength() <=0))
         {
-            System.out.println("Une seule coupe 2D doit être mentionnee dans le cas ou la dimensionalite de la grille est supérieur 2");
-            System.out.println("Format attentdu dans le fichier : "+"(x,:,:,) avec ':' les 2 axes consideres");
+            throw new EntreeIncorrecteException("Une seule coupe 2D doit être mentionnee dans le cas ou la dimensionalite de la grille est supérieur 2 \n" +
+                    "Format attentdu dans le fichier : "+"(x,:,:,) avec ':' les 2 axes consideres");
 
-            System.exit(1);
         }
 
         if(dimensionalite > 2 && noeudCoupe.getLength() == 1) {
@@ -203,6 +334,13 @@ public class ParseXML
             }
             StringTokenizer tokenizer = new StringTokenizer(((Element) coupe).getTextContent(), "(),");
             plan = new int[dimensionalite];
+            if(tokenizer.countTokens() != dimensionalite)
+            {
+                throw new EntreeIncorrecteException(
+                        "La coupe doit contenir exactement "
+                                + dimensionalite + " coordonnées."
+                );
+            }
             int i = 0;
             while (tokenizer.hasMoreTokens()) {
                 String token = tokenizer.nextToken();
@@ -214,23 +352,53 @@ public class ParseXML
                     {
                         plan[i] = -1;
                     }
+                    else
+                    {
+                        throw new EntreeIncorrecteException(
+                                "Coordonnée invalide dans la définition de la coupe : "
+                                        + token
+                        );
+                    }
                 }
                 i++;
+            }
+            int nbAxesVariables = 0;
+
+            for (int coordonnee : plan) {
+                if (coordonnee == -1) {
+                    nbAxesVariables++;
+                }
+            }
+
+            if (nbAxesVariables != 2) {
+                throw new EntreeIncorrecteException(
+                        "La coupe doit contenir exactement deux axes variables (:)."
+                );
             }
         }
     }
 
-    void recupererDimensionsGrille(Document doc) throws DimensionIncompatibleException {
+    void recupererDimensionsGrille(Document doc) throws DimensionIncompatibleException, EntreeIncorrecteException {
         NodeList dimensionGrilleNode = doc.getElementsByTagName("dimensionGrille");
         if(dimensionGrilleNode.getLength() > 1 || dimensionGrilleNode.getLength() <= 0)
         {
-            throw new DimensionIncompatibleException("Il doit avoir une seule dimension de la grille qui doit être mentionnée dans le fichier de configuration ni plus ni moins :)");
+            throw new EntreeIncorrecteException("Il doit avoir une seule dimensionalite de la grille qui doit être mentionnée dans le fichier de configuration ni plus ni moins :)");
         }
         try {
 
-            this.dimensionalite = Integer.parseInt(dimensionGrilleNode.item(0).getTextContent());
-
+            this.dimensionalite = Integer.parseInt(dimensionGrilleNode.item(0).getTextContent().trim());
+            if(dimensionalite <= 0)
+            {
+                throw new EntreeIncorrecteException(
+                        "La dimension de la grille doit être strictement positive."
+                );
+            }
             NodeList tailleGrille = doc.getElementsByTagName("tailleGrille");
+            if (tailleGrille.getLength() != 1) {
+                throw new EntreeIncorrecteException(
+                        "Le fichier doit contenir exactement une balise <tailleGrille>."
+                );
+            }
             ArrayList<Integer> dimensions = new ArrayList<>();
 
             for (int i = 0; i < tailleGrille.item(0).getChildNodes().getLength(); i++) {
@@ -238,11 +406,19 @@ public class ParseXML
                 if(node.getNodeType() == Node.ELEMENT_NODE) {
                     Element dimension = (Element) node;
                     try {
-                        dimensions.add(Integer.parseInt(dimension.getTextContent()));
+                        int taille = Integer.parseInt(dimension.getTextContent());
+                        if (taille <= 0) {
+                            throw new EntreeIncorrecteException(
+                                    "Les tailles de la grille doivent être strictement positives."
+                            );
+                        }
+                        dimensions.add(taille);
                     }
-                    catch (Exception e)
+                    catch (NumberFormatException e)
                     {
-                        e.printStackTrace();
+                        throw new EntreeIncorrecteException(
+                                "Une taille de la grille doit être un entier valide."
+                        );
                     }
                 }
 
@@ -262,14 +438,23 @@ public class ParseXML
         }
         catch (NumberFormatException e)
         {
-            System.out.println("Une tentative de conversion de chaine de caractères en entier a echouee. Merci de verifier le fichier de configuration");
-            e.printStackTrace();
+            throw  new EntreeIncorrecteException("Une tentative de conversion de chaine de caractères en entier a echouee. Merci de verifier le fichier de configuration");
         }
     }
 
-    void ExtraireVoisinage(Element voisinage)
-    {
+    void ExtraireVoisinage(Element voisinage) throws EntreeIncorrecteException {
         String nomVosinage = voisinage.getAttribute("nom");
+        if (nomVosinage == null || nomVosinage.trim().isEmpty()) {
+            throw new EntreeIncorrecteException(
+                    "Chaque voisinage personnalisé doit avoir un nom."
+            );
+        }
+
+        if (voisinages.containsKey(nomVosinage)) {
+            throw new EntreeIncorrecteException(
+                    "Le voisinage '" + nomVosinage + "' est défini plusieurs fois."
+            );
+        }
         NodeList voisinageChilds = voisinage.getChildNodes();
         ArrayList<String> coords = new ArrayList<String>();
 
@@ -279,11 +464,7 @@ public class ParseXML
             if(node1.getNodeType() == Node.ELEMENT_NODE && node1.getNodeName().equals("coords"))
             {
 
-                if(nbListesCoords > 1)
-                {
-                    System.out.println("Une seule liste de coordonnes par voisinage doit etre ecrite");
-                    System.exit(1);
-                }
+
                 NodeList coordsList = node1.getChildNodes();
                 for (int k = 0; k < coordsList.getLength() ; k++) {
                     Node node2 = coordsList.item(k);
@@ -294,8 +475,20 @@ public class ParseXML
                     }
                 }
                 nbListesCoords++;
+                if(nbListesCoords > 1)
+                {
+                    throw new EntreeIncorrecteException(
+                            "Un seul élément <coords> est autorisé par voisinage."
+                    );
+                }
 
             }
+        }
+        if (nbListesCoords != 1 || coords.isEmpty()) {
+            throw new EntreeIncorrecteException(
+                    "Chaque voisinage personnalisé doit contenir "
+                            + "une liste <coords> non vide."
+            );
         }
         int[][] deplacements = new int[coords.size()][dimensionalite];
         for (int i = 0; i < coords.size(); i++) {
@@ -309,7 +502,7 @@ public class ParseXML
 
     }
 
-    private void verifierCoordonnees(String coordonnes) {
+    private void verifierCoordonnees(String coordonnes) throws EntreeIncorrecteException {
         StringTokenizer tokenizer = new StringTokenizer(coordonnes, "(),");
         if(tokenizer.countTokens() == dimensionalite)
         {
@@ -318,18 +511,15 @@ public class ParseXML
                 try {
                     Integer.parseInt(token);
                 } catch (NumberFormatException e) {
-                    System.out.println("Erreur dans la saisie des coordonees du voisinage, Verifier si les coordooness saisies sont tous des entiers");
-                    System.exit(1);
+                    throw new EntreeIncorrecteException( "Erreur dans la saisie des coordonees du voisinage, Verifier si les coordooness saisies sont tous des entiers");
                 }
             }
-            System.out.println(coordonnes);
+            System.out.println("OK "+coordonnes);
         }
         else
         {
-            System.out.println("Cordonnes pour le voisinage incorrectes verifier la liste de coordonnes dans le fichier d'entree");
-            System.out.println("Dimensionalite attendue : "+ dimensionalite +"\n"+ "Dimensionalite trouvee "+ tokenizer.countTokens());
-
-            System.exit(1);
+            throw  new EntreeIncorrecteException("Cordonnes pour le voisinage incorrectes verifier la liste de coordonnes dans le fichier d'entree \n" +
+           "Dimensionalite attendue : "+ dimensionalite +"\n"+ "Dimensionalite trouvee "+ tokenizer.countTokens());
         }
     }
 
@@ -342,5 +532,26 @@ public class ParseXML
             deplacements[index][i++] = Integer.parseInt(token);
         }
 
+    }
+    private void verifierCoordonneesCellule(int[] coordonnees) throws EntreeIncorrecteException {
+
+        if (coordonnees.length != dimensionalite) {
+            throw new EntreeIncorrecteException(
+                    "Le nombre de coordonnées est incorrect."
+            );
+        }
+
+        for (int i = 0; i < dimensionalite; i++) {
+            if (coordonnees[i] < 0
+                    || coordonnees[i] >= dimensionsGrille[i]) {
+
+                throw new EntreeIncorrecteException(
+                        "La coordonnée " + coordonnees[i]
+                                + " est invalide pour la dimension " + i
+                                + ". Taille de cette dimension : "
+                                + dimensionsGrille[i] + "."
+                );
+            }
+        }
     }
 }
