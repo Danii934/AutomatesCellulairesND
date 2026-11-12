@@ -1,10 +1,12 @@
 package parsing;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import Exceptions.DimensionIncompatibleException;
 import Exceptions.EntreeIncorrecteException;
@@ -13,6 +15,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 import voisinages.GGenerique;
 import voisinages.Voisinage;
 
@@ -118,7 +121,7 @@ public class ParseXML
         return regleEvolution;
     }
 
-    public void readFile()
+    public void readFile() throws EntreeIncorrecteException, DimensionIncompatibleException
     {
         try {
             File file = new File(filename);
@@ -174,6 +177,7 @@ public class ParseXML
             String regleFinale = nodeRegle.item(0).getTextContent().replaceAll("\\s+", "");
             ParseRule parseRegle = new ParseRule(regleFinale);
             parseRegle.setVoisinageMap(voisinages);
+            parseRegle.setDimensionalite(dimensionalite);
             regleEvolution = parseRegle.traiterRegle();
 
             System.out.println(regleEvolution);
@@ -200,7 +204,7 @@ public class ParseXML
             if(randomInitialisation)
             {
                 Node randomK = recupererElementEnfant(enfantsCellulesVivantes,"random");
-                randomConst = Integer.parseInt(randomK.getTextContent());
+                randomConst = Integer.parseInt(nettoyer(randomK.getTextContent()));
 
                 if (randomConst < 0 || randomConst > 100) {
                     throw new EntreeIncorrecteException(
@@ -217,8 +221,10 @@ public class ParseXML
                     Node node = listeCellules.item(i);
                     if(node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals("cellule"))
                     {
-                        verifierCoordonnees(node.getTextContent());
-                        cellulesVivantes.add(node.getTextContent());
+                        String txt = nettoyer(node.getTextContent());
+                        verifierCoordonnees(txt);
+                        cellulesVivantes.add(txt);
+
                     }
                 }
                 coordonneesCellulesVivantes = new int[cellulesVivantes.size()][dimensionalite];
@@ -250,15 +256,14 @@ public class ParseXML
             System.out.print("Finsih\n");
 
         }
-        catch (DimensionIncompatibleException e)
-        {
-            e.printStackTrace();
-            System.exit(1);
+        catch (NumberFormatException e) {
+            throw new EntreeIncorrecteException("Entier invalide : " + e.getMessage());
         }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            System.exit(1);
+        catch (IllegalArgumentException e) {   // erreurs de ParseRule
+            throw new EntreeIncorrecteException("Règle invalide : " + e.getMessage());
+        }
+        catch (ParserConfigurationException | SAXException | IOException e) {
+            throw new EntreeIncorrecteException("Fichier illisible ou XML mal formé : " + e.getMessage());
         }
 
 
@@ -332,7 +337,7 @@ public class ParseXML
             if (coupe.getNodeType() == Node.ELEMENT_NODE) {
                 System.out.println("Coupe 2D : " + ((Element) coupe).getTextContent());
             }
-            StringTokenizer tokenizer = new StringTokenizer(((Element) coupe).getTextContent(), "(),");
+            StringTokenizer tokenizer = new StringTokenizer(nettoyer(((Element) coupe).getTextContent()), "(),");
             plan = new int[dimensionalite];
             if(tokenizer.countTokens() != dimensionalite)
             {
@@ -375,6 +380,13 @@ public class ParseXML
                         "La coupe doit contenir exactement deux axes variables (:)."
                 );
             }
+            for (int k = 0; k < dimensionalite; k++) {
+                if (plan[k] != -1 && (plan[k] < 0 || plan[k] >= dimensionsGrille[k])) {
+                    throw new EntreeIncorrecteException(
+                            "Coordonnée de coupe " + plan[k] + " hors de la grille sur l'axe " + k
+                                    + " (taille " + dimensionsGrille[k] + ").");
+                }
+            }
         }
     }
 
@@ -406,7 +418,7 @@ public class ParseXML
                 if(node.getNodeType() == Node.ELEMENT_NODE) {
                     Element dimension = (Element) node;
                     try {
-                        int taille = Integer.parseInt(dimension.getTextContent());
+                        int taille = Integer.parseInt(nettoyer(dimension.getTextContent()));
                         if (taille <= 0) {
                             throw new EntreeIncorrecteException(
                                     "Les tailles de la grille doivent être strictement positives."
@@ -470,8 +482,9 @@ public class ParseXML
                     Node node2 = coordsList.item(k);
 
                     if(node2.getNodeType() == Node.ELEMENT_NODE && node2.getNodeName().equals("coord")) {
-                        verifierCoordonnees(node2.getTextContent());
-                        coords.add(node2.getTextContent());
+                        String txt = nettoyer(node2.getTextContent());
+                        verifierCoordonnees(txt);
+                        coords.add(txt);
                     }
                 }
                 nbListesCoords++;
@@ -553,5 +566,8 @@ public class ParseXML
                 );
             }
         }
+    }
+    private static String nettoyer(String s) {
+        return s.replaceAll("\\s+", "");
     }
 }

@@ -10,6 +10,8 @@ import java.util.StringTokenizer;
 public class ParseRule {
     String regle;
     Map<String, Voisinage> voisinageMap;
+    private int dimensionalite;
+    public void setDimensionalite(int d) { this.dimensionalite = d; }
     public ParseRule(String regle)
     {
         this.regle = regle;
@@ -145,11 +147,11 @@ public class ParseRule {
 
         switch (s) {
             case "G0":  v = new G0();  break;
-            case "G2":  v = new G2();  break;
-            case "G4":  v = new G4();  break;
-            case "G6":  v = new G6();  break;
-            case "G8":  v = new G8();  break;
-            case "G26": v = new G26(); break;
+            case "G2":  exigerDimension(s,1) ; v = new G2();  break;
+            case "G4":  exigerDimension(s,2) ; v = new G4();  break;
+            case "G6":  exigerDimension(s,3) ; v = new G6();  break;
+            case "G8":  exigerDimension(s,2) ; v = new G8();  break;
+            case "G26": exigerDimension(s,3Améliora) ; v = new G26(); break;
             default:
                 throw new IllegalArgumentException("Voisinage non reconnu : " + s);
         }
@@ -177,5 +179,11 @@ public class ParseRule {
 
     public void setVoisinageMap(Map<String, Voisinage> voisinageMap) {
         this.voisinageMap = voisinageMap;
+    }
+
+    private void exigerDimension(String nom, int d) {
+        if (dimensionalite != d)
+            throw new IllegalArgumentException(nom + " n'est valable qu'en dimension " + d
+                    + " (grille de dimension " + dimensionalite + ")");
     }
 }
