@@ -236,7 +236,7 @@ public class ParseXML
                 }
 
 
-
+                /*System.out.println("Celulles vivantes ");
                 for (int i = 0; i < coordonneesCellulesVivantes.length; i++) {
                     verifierCoordonneesCellule(coordonneesCellulesVivantes[i]);
                     System.out.print("(");
@@ -251,9 +251,9 @@ public class ParseXML
 
                     }
                     System.out.println(")");
-                }
+                }*/
             }
-            System.out.print("Finsih\n");
+            System.out.print("Fin traitement du fichier d'entree\n");
 
         }
         catch (NumberFormatException e) {
@@ -527,7 +527,7 @@ public class ParseXML
                     throw new EntreeIncorrecteException( "Erreur dans la saisie des coordonees du voisinage, Verifier si les coordooness saisies sont tous des entiers");
                 }
             }
-            System.out.println("OK "+coordonnes);
+            /*System.out.println("OK "+coordonnes);*/
         }
         else
         {

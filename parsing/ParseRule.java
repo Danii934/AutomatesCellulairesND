@@ -151,7 +151,7 @@ public class ParseRule {
             case "G4":  exigerDimension(s,2) ; v = new G4();  break;
             case "G6":  exigerDimension(s,3) ; v = new G6();  break;
             case "G8":  exigerDimension(s,2) ; v = new G8();  break;
-            case "G26": exigerDimension(s,3Améliora) ; v = new G26(); break;
+            case "G26": exigerDimension(s,3) ; v = new G26(); break;
             default:
                 throw new IllegalArgumentException("Voisinage non reconnu : " + s);
         }
