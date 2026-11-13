@@ -6,9 +6,9 @@ Simulateur d'automates cellulaires en Java pour des grilles de **dimension quelc
 
 ## Aperçu
 
-| Jeu de la vie                         | Triangle de Sierpiński                             |
+| Planeur                      | Triangle de Sierpiński                             |
 |---------------------------------------|----------------------------------------------------|
-| ![Jeu de la vie](captures/glider.gif) | ![Triangle de Sierpiński](captures/Sierpinski.png) |
+| ![Planeur](captures/glider.gif) | ![Triangle de Sierpiński](captures/Sierpinski.png) |
 ## Fonctionnalités
 
 - Grille de dimension `d` choisie dans le fichier, construite par une structure récursive
