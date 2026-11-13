@@ -8,7 +8,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.concurrent.CountDownLatch;
 import javax.swing.Timer;
-import tab.GrilleGraphique;
+import gui.GrilleGraphique;
 
 public class Main {
     private static final int PAS_PAR_DEFAUT = 20;
@@ -45,16 +45,22 @@ public class Main {
 
     private static void lancer(File f, Scanner sc) {
         Automate a;
+        ParseXML p;
         try {
-            ParseXML p = new ParseXML(f.getPath());
+            p = new ParseXML(f.getPath());
             p.readFile();
             a = new Automate(p);
         } catch (Exception e) {
             System.out.println("Fichier invalide (" + f.getName() + ") : " + e.getMessage());
             return;
         }
-        if (a.getNbDimensions() == 2 && demanderGraphique(sc)) simulerGraphique(a);
-        else simulerConsole(a, demanderPas(sc));
+        int d = a.getNbDimensions();
+        if (d >= 2 && demanderGraphique(sc)) {
+            int[] plan = (d == 2) ? new int[]{-1, -1} : p.getPlan();
+            simulerGraphique(a, plan);
+        } else {
+            simulerConsole(a, demanderPas(sc));
+        }
     }
 
     private static int demanderPas(Scanner sc) {
@@ -89,9 +95,8 @@ public class Main {
         return !sc.nextLine().trim().toLowerCase().startsWith("n");
     }
 
-    private static void simulerGraphique(Automate a) {
-        int[] dims = a.getDimensions();
-        int[] plan = {-1, -1};
+    private static void simulerGraphique(Automate a, int[] plan)  {
+        int[] dims = a.tailleCoupe(plan);
         int taille = Math.max(4, Math.min(30, 600 / Math.max(dims[0], dims[1])));
         GrilleGraphique g = new GrilleGraphique(dims[1], dims[0], taille);  // largeur = colonnes
 
