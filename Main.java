@@ -103,7 +103,7 @@ public class Main {
 
         CountDownLatch fermeture = new CountDownLatch(1);
         int[] t = {0};
-        Timer timer = new Timer(200, null);
+        Timer timer = new Timer(500, null);
         timer.addActionListener(e -> {
             g.mettreAJour(a.casesVivantes(plan));
             boolean change = a.pas();
