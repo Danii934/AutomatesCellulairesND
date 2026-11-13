@@ -58,7 +58,7 @@ Voici ce que contient chaque balise :
 
 | Fichier | Contenu |
 |---|---|
-| `jeu_de_la_vie.xml` | Jeu de la vie, grille 20×20, 15 % de cellules allumées |
+| `jeu_de_la_vie.xml` | Jeu de la vie, grille, 15 % de cellules allumées |
 | `sierpinski.xml` | triangle de Sierpiński en 1D (31 pas) |
 
 ## Organisation du code
