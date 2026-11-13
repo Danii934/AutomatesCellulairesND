@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<automate>
+    <dimensionGrille>2</dimensionGrille>
+    <tailleGrille><dimension>8</dimension><dimension>8</dimension></tailleGrille>
+    <regle>SI(EQ(COMPTER(G0),1),
+        SI(OU(EQ(COMPTER(G8),3),EQ(COMPTER(G8),4)),1,0),
+        SI(EQ(COMPTER(G8),3),1,0))</regle>
+    <initialisation>
+        <cellules>
+            <cellule>(0,1)</cellule>
+            <cellule>(1,2)</cellule>
+            <cellule>(2,0)</cellule>
+            <cellule>(2,1)</cellule>
+            <cellule>(2,2)</cellule>
+        </cellules>
+    </initialisation>
+</automate>

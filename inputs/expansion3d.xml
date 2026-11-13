@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<automate>
+    <dimensionGrille>3</dimensionGrille>
+    <tailleGrille>
+        <dimension>9</dimension><dimension>9</dimension><dimension>9</dimension>
+    </tailleGrille>
+    <coupe>(4,:,:)</coupe>
+    <regle>SUPEQ(COMPTER(G6),1)</regle>
+    <initialisation>
+        <cellules><cellule>(4,4,4)</cellule></cellules>
+    </initialisation>
+</automate>

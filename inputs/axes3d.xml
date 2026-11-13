@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<automate>
+    <dimensionGrille>3</dimensionGrille>
+    <tailleGrille>
+        <dimension>4</dimension><dimension>5</dimension><dimension>6</dimension>
+    </tailleGrille>
+    <coupe>(:,:,5)</coupe>
+    <regle>COMPTER(G0)</regle>
+    <initialisation>
+        <cellules>
+            <cellule>(1,0,0)</cellule>
+            <cellule>(1,1,2)</cellule>
+            <cellule>(1,3,5)</cellule>
+            <cellule>(2,2,2)</cellule>
+        </cellules>
+    </initialisation>
+</automate>

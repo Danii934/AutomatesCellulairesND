@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<automate>
+    <dimensionGrille>1</dimensionGrille>
+    <tailleGrille><dimension>63</dimension></tailleGrille>
+    <regle>ET(EQ(COMPTER(G0),0),EQ(COMPTER(G2),1))</regle>
+    <initialisation>
+        <cellules>
+            <cellule>(31)</cellule>
+        </cellules>
+    </initialisation>
+</automate>

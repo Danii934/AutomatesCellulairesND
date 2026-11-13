@@ -4,7 +4,9 @@ import Exceptions.DimensionIncompatibleException;
 import tab.Cellule;
 import tab.Grille;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class GGenerique extends Voisinage {
 
@@ -108,5 +110,46 @@ public class GGenerique extends Voisinage {
 
         }
         return s+="}";
+    }
+    /**
+     * Voisinage « en croix » : un pas le long de chaque axe (dit de von Neumann).
+     * G2 en 1D, G4 en 2D, G6 en 3D.
+     * @param d           dimension de la grille
+     * @param avecCentre  true pour G2/G4/G6, false pour les variantes G2* G4* G6*
+     */
+    public static int[][] voisinsEnCroix(int d, boolean avecCentre) {
+        List<int[]> res = new ArrayList<>();
+        if (avecCentre) res.add(new int[d]);
+        for (int k = 0; k < d; k++)
+            for (int s = -1; s <= 1; s += 2) {
+                int[] o = new int[d];
+                o[k] = s;
+                res.add(o);
+            }
+        return res.toArray(new int[0][]);
+    }
+
+    /**
+     * Voisinage « en bloc » : tous les décalages de {-1,0,1}^d, qu'ils touchent
+     * par une face, une arête ou un coin (dit de Moore). G8 en 2D, G26 en 3D.
+     * @param d           dimension de la grille
+     * @param avecCentre  true pour G8/G26, false pour les variantes G8* /G26*
+     */
+    public static int[][] voisinsEnBloc(int d, boolean avecCentre) {
+        List<int[]> res = new ArrayList<>();
+        int total = (int) Math.pow(3, d);
+        for (int n = 0; n < total; n++) {
+            int[] o = new int[d];
+            int m = n;
+            boolean nul = true;
+            for (int k = 0; k < d; k++) {
+                o[k] = (m % 3) - 1;
+                m /= 3;
+                if (o[k] != 0) nul = false;
+            }
+            if (nul && !avecCentre) continue;
+            res.add(o);
+        }
+        return res.toArray(new int[0][]);
     }
 }

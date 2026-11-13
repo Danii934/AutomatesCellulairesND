@@ -152,12 +152,22 @@ public class ParseRule {
             case "G6":  exigerDimension(s,3) ; v = new G6();  break;
             case "G8":  exigerDimension(s,2) ; v = new G8();  break;
             case "G26": exigerDimension(s,3) ; v = new G26(); break;
+            case "G2*": exigerDimension(s, 1); v = generique(GGenerique.voisinsEnCroix(1, false)); break;
+            case "G4*": exigerDimension(s, 2); v = generique(GGenerique.voisinsEnCroix(2, false)); break;
+            case "G8*": exigerDimension(s, 2); v = generique(GGenerique.voisinsEnBloc(2, false));  break;
+            case "G6*": exigerDimension(s, 3); v = generique(GGenerique.voisinsEnCroix(3, false)); break;
+            case "G26*": exigerDimension(s, 3); v = generique(GGenerique.voisinsEnBloc(3, false));  break;
             default:
                 throw new IllegalArgumentException("Voisinage non reconnu : " + s);
         }
         voisinageMap.put(s, v);
         return v;
 
+    }
+    private Voisinage generique(int[][] deplacements) {
+        GGenerique g = new GGenerique();
+        g.setDeplacements(deplacements);
+        return g;
     }
     private void verifierToken(StringTokenizer tokenizer, String token)
     {

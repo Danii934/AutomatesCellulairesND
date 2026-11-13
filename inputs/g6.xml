@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<automate>
+    <dimensionGrille>3</dimensionGrille>
+    <tailleGrille>
+        <dimension>3</dimension><dimension>3</dimension><dimension>3</dimension>
+    </tailleGrille>
+    <coupe>(1,:,:)</coupe>
+    <regle>COMPTER(G26*)</regle>
+    <initialisation>
+        <random>100</random>
+    </initialisation>
+</automate>

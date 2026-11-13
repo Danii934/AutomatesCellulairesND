@@ -35,6 +35,9 @@ public class ParseXML
     Map<String, Voisinage> voisinages;
     Operateur regleEvolution;
 
+    private static final Set<String> NOMS_RESERVES = Set.of(
+            "G0", "G2", "G4", "G6", "G8", "G26", "G2*", "G4*", "G6*", "G8*", "G26*");
+
     public  ParseXML()
     {
 
@@ -460,6 +463,14 @@ public class ParseXML
             throw new EntreeIncorrecteException(
                     "Chaque voisinage personnalisé doit avoir un nom."
             );
+        }
+        if (!nomVosinage.matches("G\\d+\\*?")) {
+            throw new EntreeIncorrecteException("Nom de voisinage invalide '" + nomVosinage
+                    + "' : il faut un G, un numéro et éventuellement une étoile (ex. G5, G12*).");
+        }
+        if (NOMS_RESERVES.contains(nomVosinage)) {
+            throw new EntreeIncorrecteException("Le nom '" + nomVosinage
+                    + "' est réservé à un voisinage prédéfini.");
         }
 
         if (voisinages.containsKey(nomVosinage)) {

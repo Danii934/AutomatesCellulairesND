@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<automate>
+    <dimensionGrille>1</dimensionGrille>
+    <tailleGrille><dimension>41</dimension></tailleGrille>
+    <voisinages>
+        <voisinage nom="G5">
+            <coords>
+                <coord>(-2)</coord>
+                <coord>(2)</coord>
+            </coords>
+        </voisinage>
+    </voisinages>
+    <regle>SUPEQ(COMPTER(G5),1)</regle>
+    <initialisation>
+        <cellules><cellule>(20)</cellule></cellules>
+    </initialisation>
+</automate>
