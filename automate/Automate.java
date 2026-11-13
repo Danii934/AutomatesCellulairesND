@@ -109,4 +109,11 @@ public class Automate {
             if (plan[k] == -1) res[n++] = dimensions[k];
         return res;
     }
+
+    public List<Integer> vivantes1D() {
+        List<Integer> res = new ArrayList<>();
+        for (int i = 0; i < dimensions[0]; i++)
+            if (grille.get(new int[]{i}, 0, 1).getValeur() > 0) res.add(i);
+        return res;
+    }
 }

@@ -55,12 +55,13 @@ public class Main {
             return;
         }
         int d = a.getNbDimensions();
-        if (d >= 2 && demanderGraphique(sc)) {
-            int[] plan = (d == 2) ? new int[]{-1, -1} : p.getPlan();
-            simulerGraphique(a, plan);
-        } else {
+        boolean graphique = demanderGraphique(sc);
+        if (graphique && d == 1)
+            simulerGraphique1D(a, demanderPas(sc));
+        else if (graphique)
+            simulerGraphique(a, d == 2 ? new int[]{-1, -1} : p.getPlan());
+        else
             simulerConsole(a, demanderPas(sc));
-        }
     }
 
     private static int demanderPas(Scanner sc) {
@@ -115,6 +116,31 @@ public class Main {
         timer.start();
 
         try { fermeture.await(); }                       // le menu attend la fermeture de la fenêtre
+        catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+    }
+
+    private static void simulerGraphique1D(Automate a, int nbPas) {
+        int largeur = a.getDimensions()[0];
+        int hauteur = nbPas + 1;                                  // une ligne par génération, t = 0..nbPas
+        int taille = Math.max(4, Math.min(30, 600 / Math.max(largeur, hauteur)));
+        GrilleGraphique g = new GrilleGraphique(largeur, hauteur, taille);
+
+        CountDownLatch fermeture = new CountDownLatch(1);
+        int[] t = {0};
+        Timer timer = new Timer(100, null);
+        timer.addActionListener(e -> {
+            for (int x : a.vivantes1D()) g.colorierCase(x, t[0]);   // ligne t = génération courante
+            g.window.setTitle("t=" + t[0]);
+            if (t[0] >= nbPas) { timer.stop(); return; }
+            a.pas();
+            t[0]++;
+        });
+        g.window.addWindowListener(new WindowAdapter() {
+            @Override public void windowClosed(WindowEvent e) { timer.stop(); fermeture.countDown(); }
+        });
+        timer.start();
+
+        try { fermeture.await(); }
         catch (InterruptedException e) { Thread.currentThread().interrupt(); }
     }
 }
