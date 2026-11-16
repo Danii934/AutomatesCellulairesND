@@ -23,8 +23,8 @@ Simulateur d'automates cellulaires en Java pour des grilles de **dimension quelc
 Prérequis : JDK 11 ou supérieur.
 
 ```bash
-javac -d out $(find src -name "*.java")
-java -cp out automate.Main
+javac -d out $(find . -name "*.java")
+java -cp out Main.java
 ```
 
 À lancer depuis le dossier contenant les fichiers `.xml`.
